@@ -13,6 +13,10 @@ const poblarProductos = async (request, response) => {
 
             const stock = Math.floor(Math.random() * 50) + 1;
 
+            const result = await pool.query('SELECT * FROM productos');
+            
+            console.log(result.rows);
+
             const query = `
                 INSERT INTO productos
                 (nombre, precio, stock, descripcion, imagen_url)
