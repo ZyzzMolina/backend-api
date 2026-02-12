@@ -1,6 +1,5 @@
 const pool = require('../config/db');
 
-// --- Tu función actual de poblado (con una pequeña corrección en el commit) ---
 const poblarProductos = async (request, response) => {
     try {
         const apiFetch = await fetch('http://fakestoreapi.com/products');
@@ -44,7 +43,7 @@ const poblarProductos = async (request, response) => {
 // COINCIDENCIAS POR STRING PRODUCTOS
 const buscarProductos = async (req, res) => {
     try {
-        const { termino } = req.params; // Captura lo que pongas después de /productos/
+        const { termino } = req.params; 
 
         const query = `
             SELECT productos.*, c.nombre AS categoria_nombre
@@ -54,7 +53,7 @@ const buscarProductos = async (req, res) => {
                OR productos.descripcion ILIKE $1
         `;
 
-        // El % permite buscar coincidencias en cualquier parte del texto
+        
         const values = [`%${termino}%`];
         const result = await pool.query(query, values);
 
