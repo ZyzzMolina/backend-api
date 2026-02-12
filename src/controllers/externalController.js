@@ -1,60 +1,89 @@
 const pool = require('../config/db');
 
+// --- Tu función actual de poblado (con una pequeña corrección en el commit) ---
 const poblarProductos = async (request, response) => {
     try {
-        // Fetch FakeStoreApi
         const apiFetch = await fetch('http://fakestoreapi.com/products');
         const products = await apiFetch.json();
 
         let inserciones = 0;
-        // Destructurar el objeto
+        
         for(const product of products){
-            
             const { title, price, description, image, category} = product;
-
             const stock = Math.floor(Math.random() * 50) + 1;
-
-            // --- INICIO LÓGICA CATEGORÍA ---
-            let id_categoria;
             
-            // Verificar si la categoría ya existe
-            const catResult = await pool.query('SELECT id FROM Categoria WHERE nombre = $1', [category]);
+            let id_categoria;
+            const catResultado = await pool.query('SELECT id FROM Categoria WHERE nombre = $1', [category]);
 
-            if (catResult.rows.length > 0) {
-                // Si existe, tomamos el ID
-                id_categoria = catResult.rows[0].id;
+            if (catResultado.rows.length > 0) {
+                id_categoria = catResultado.rows[0].id;
             } else {
-                // Si no existe, la insertamos y devolvemos el ID creado
                 const newCat = await pool.query('INSERT INTO Categoria (nombre) VALUES ($1) RETURNING id', [category]);
                 id_categoria = newCat.rows[0].id;
             }
-            // --- FIN LÓGICA CATEGORÍA ---
 
-            const result = await pool.query('SELECT * FROM productos');
-            
-            console.log(result.rows);
-
-            
             const query = `
-                INSERT INTO productos
-                (nombre, precio, stock, descripcion, imagen_url, id_categoria)
+                INSERT INTO productos (nombre, precio, stock, descripcion, imagen_url, id_categoria)
                 VALUES ($1, $2, $3, $4, $5, $6)
-            `
+            `;
 
             await pool.query(query, [title, price, stock, description, image, id_categoria]);
-
             inserciones++;
         }
-        response.status(200).json(
-            {
-                mensaje: "Carga masiva exitosa", 
-                cantidad: inserciones
-            }
-        );
+
+        response.status(200).json({
+            mensaje: "Carga masiva exitosa", 
+            cantidad: inserciones
+        });
     } catch (error) {
         console.log(`Error: ${error}`);
-        response.status(500).json({error: error.message})
+        response.status(500).json({error: error.message});
     }
 };
 
-module.exports = { poblarProductos };
+// COINCIDENCIAS POR STRING PRODUCTOS
+const buscarProductos = async (req, res) => {
+    try {
+        const { termino } = req.params; // Captura lo que pongas después de /productos/
+
+        const query = `
+            SELECT productos.*, c.nombre AS categoria_nombre
+            FROM productos
+            INNER JOIN Categoria c ON productos.id_categoria = c.id
+            WHERE productos.nombre ILIKE $1 
+               OR productos.descripcion ILIKE $1
+        `;
+
+        // El % permite buscar coincidencias en cualquier parte del texto
+        const values = [`%${termino}%`];
+        const result = await pool.query(query, values);
+
+        res.status(200).json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// COINCIDENCIAS POR STRING CATEGORIA
+const buscarCategoria = async (req, res) => {
+    try {
+        const { termino } = req.params;
+
+        const query = `
+            SELECT id, nombre
+            FROM Categoria
+            WHERE nombre ILIKE $1
+        `;
+
+        const values = [`%${termino}%`];
+        const result = await pool.query(query, values);
+
+        res.status(200).json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+
+module.exports = { poblarProductos, buscarProductos, buscarCategoria };
