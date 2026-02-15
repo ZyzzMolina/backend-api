@@ -40,21 +40,29 @@ const poblarProductos = async (request, response) => {
     }
 };
 
-// COINCIDENCIAS POR STRING PRODUCTOS
+// COINCIDENCIAS POR STRING PRODUCTOS 
 const buscarProductos = async (req, res) => {
     try {
-        const { termino } = req.params; 
+        const { q } = req.query;
+
+        // Validación: Parámetro obligatorio
+        if (!q || q.trim() === '') {
+            return res.status(400).json({ 
+                error: "El parámetro 'q' es requerido y no puede estar vacío" 
+            });
+        }
 
         const query = `
-            SELECT productos.*, c.nombre AS categoria_nombre
+            SELECT productos.id, productos.nombre, productos.descripcion, 
+                   c.nombre AS categoria, productos.precio, productos.stock
             FROM productos
             INNER JOIN Categoria c ON productos.id_categoria = c.id
             WHERE productos.nombre ILIKE $1 
                OR productos.descripcion ILIKE $1
+            ORDER BY productos.nombre ASC
         `;
 
-        
-        const values = [`%${termino}%`];
+        const values = [`%${q.trim()}%`];
         const result = await pool.query(query, values);
 
         res.status(200).json(result.rows);

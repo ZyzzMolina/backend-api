@@ -4,7 +4,8 @@ const router = express.Router();
 
 router.post('/poblar', poblarProductos);
 
-router.get('/buscarProductos/:termino', buscarProductos);
+
+router.get('/search', buscarProductos);
 
 router.get('/buscarCategoria/:termino', buscarCategoria);
 
