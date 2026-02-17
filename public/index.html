@@ -206,26 +206,15 @@
         const emptyState = document.getElementById('emptyState');
 
        
-        let debounceTimer;
-
-        
-        searchInput.addEventListener('input', debounceSearch);
-        clearButton.addEventListener('click', clearSearch);
-
-        // Función debounce para la búsqueda en tiempo real
-        function debounceSearch() {
-            clearTimeout(debounceTimer);
+        searchInput.addEventListener('input', () => {
             const query = searchInput.value.trim();
-
             if (!query) {
                 clearSearch();
-                return;
-            }
-
-            debounceTimer = setTimeout(() => {
+            } else {
                 performSearch(query);
-            }, 300); 
-        }
+            }
+        });
+        clearButton.addEventListener('click', clearSearch);
 
         // Realizar la búsqueda
         async function performSearch(query) {
