@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 
+
 const poblarProductos = async (request, response) => {
     try {
         const apiFetch = await fetch('http://fakestoreapi.com/products');

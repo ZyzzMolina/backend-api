@@ -9,6 +9,8 @@ const pool = new Pool({
     host: process.env.DB_HOST
 });
 
-pool.on('connnect', () => console.log('Conexion exitosa'));
+pool.on('connect', () => console.log('Conexion exitosa'));
+
+pool.on('error', (err) => console.error('Error en la conexión:', err));
 
 module.exports = pool;
