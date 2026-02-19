@@ -91,6 +91,15 @@ const buscarCategoria = async (req, res) => {
     }
 };
 
+const getProductos = async (req, res) => {
+    try {
+        const response = await pool.query('SELECT * FROM productos ORDER BY id ASC');
+        res.status(200).json(response.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
 
-module.exports = { poblarProductos, buscarProductos, buscarCategoria };
+
+module.exports = { poblarProductos, buscarProductos, buscarCategoria, getProductos };
