@@ -101,6 +101,33 @@ const getProductos = async (req, res) => {
     }
 };
 
+const createProducto = async (req, res) => {
+    try {
+        const { nombre, precio, stock, descripcion, imagen_url, id_categoria } = req.body;
 
+        // Validación de campos requeridos
+        if (!nombre || !precio || stock === undefined || !id_categoria) {
+            return res.status(400).json({ 
+                error: "Los campos 'nombre', 'precio', 'stock' e 'id_categoria' son requeridos" 
+            });
+        }
 
-module.exports = { poblarProductos, buscarProductos, buscarCategoria, getProductos };
+        const query = `
+            INSERT INTO productos (nombre, precio, stock, descripcion, imagen_url, id_categoria)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, nombre, precio, stock, descripcion, imagen_url, id_categoria
+        `;
+
+        const values = [nombre, precio, stock, descripcion || null, imagen_url || null, id_categoria];
+        const result = await pool.query(query, values);
+
+        res.status(201).json({
+            mensaje: "Producto creado exitosamente",
+            producto: result.rows[0]
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { poblarProductos, buscarProductos, buscarCategoria, getProductos, createProducto };
