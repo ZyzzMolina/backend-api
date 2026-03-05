@@ -102,16 +102,39 @@ const getProductos = async (req, res) => {
 };
 
 const createProducto = async (req, res) => {
+    const client = await pool.connect();
+    
     try {
         const { nombre, precio, stock, descripcion, imagen_url, id_categoria } = req.body;
 
         // Validación de campos requeridos
         if (!nombre || !precio || stock === undefined || !id_categoria) {
+            const campos_faltantes = [];
+            if (!nombre) campos_faltantes.push('nombre');
+            if (!precio) campos_faltantes.push('precio');
+            if (stock === undefined) campos_faltantes.push('stock');
+            if (!id_categoria) campos_faltantes.push('id_categoria');
+            
             return res.status(400).json({ 
-                error: "Los campos 'nombre', 'precio', 'stock' e 'id_categoria' son requeridos" 
+                error: "Campos requeridos faltantes",
+                campos_faltantes: campos_faltantes,
+                campos_recibidos: req.body
             });
         }
 
+        // Iniciar transacción
+        await client.query('BEGIN');
+
+        // Verificar que la categoría existe
+        const catCheck = await client.query('SELECT id FROM Categoria WHERE id = $1', [id_categoria]);
+        if (catCheck.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ 
+                error: "La categoría especificada no existe" 
+            });
+        }
+
+        // Insertar el producto
         const query = `
             INSERT INTO productos (nombre, precio, stock, descripcion, imagen_url, id_categoria)
             VALUES ($1, $2, $3, $4, $5, $6)
@@ -119,14 +142,28 @@ const createProducto = async (req, res) => {
         `;
 
         const values = [nombre, precio, stock, descripcion || null, imagen_url || null, id_categoria];
-        const result = await pool.query(query, values);
+        const result = await client.query(query, values);
+
+        // Confirmar transacción
+        await client.query('COMMIT');
 
         res.status(201).json({
             mensaje: "Producto creado exitosamente",
             producto: result.rows[0]
         });
     } catch (error) {
+        // Rollback en caso de error
+        try {
+            await client.query('ROLLBACK');
+        } catch (rollbackError) {
+            res.status(500).json({ error: "Error durante el rollback" });
+            console.error('Error durante el rollback:', rollbackError);
+        }
+        
+        console.error('Error al crear producto:', error);
         res.status(500).json({ error: error.message });
+    } finally {
+        client.release();
     }
 };
 
