@@ -8,7 +8,10 @@ module.exports = function (req, res, next) {
         return res.status(401).json({ message: 'Acceso denegado. No se proporcionó un token.' });
     }
     try{
-        const tokenlimpio = token.replace('Bearer ', ''); // Eliminar el prefijo "Bearer " si está presente
+        const tokenlimpio = token.r
+        
+        
+        eplace('Bearer ', ''); // Eliminar el prefijo "Bearer " si está presente
         const decoded = jwt.verify(tokenlimpio, process.env.JWT_SECRET);
         req.user = decoded; // Agregar la información del usuario al objeto de solicitud
         next(); // Continuar con la siguiente función de middleware o ruta
