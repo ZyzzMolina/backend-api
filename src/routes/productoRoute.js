@@ -15,3 +15,5 @@ router.get('/buscarCategoria/:termino', buscarCategoria);
 
 
 module.exports = router;
+
+
