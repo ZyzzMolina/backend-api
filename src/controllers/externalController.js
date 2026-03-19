@@ -105,7 +105,8 @@ const createProducto = async (req, res) => {
     const client = await pool.connect();
     
     try {
-        const { nombre, precio, stock, descripcion, imagen_url, id_categoria } = req.body;
+        const { nombre, precio, stock, descripcion, imagen_url, id_categoria, youtube_id } = req.body;
+
 
         // Validación de campos requeridos
         if (!nombre || !precio || stock === undefined || !id_categoria) {
@@ -114,7 +115,9 @@ const createProducto = async (req, res) => {
             if (!precio) campos_faltantes.push('precio');
             if (stock === undefined) campos_faltantes.push('stock');
             if (!id_categoria) campos_faltantes.push('id_categoria');
-            
+            if (!descripcion) campos_faltantes.push('descripcion');
+            if (!youtube_id) campos_faltantes.push('youtube_id');
+
             return res.status(400).json({ 
                 error: "Campos requeridos faltantes",
                 campos_faltantes: campos_faltantes,
@@ -136,12 +139,12 @@ const createProducto = async (req, res) => {
 
         // Insertar el producto
         const query = `
-            INSERT INTO productos (nombre, precio, stock, descripcion, imagen_url, id_categoria)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id, nombre, precio, stock, descripcion, imagen_url, id_categoria
+            INSERT INTO productos (nombre, precio, stock, descripcion, imagen_url, id_categoria, youtube_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, nombre, precio, stock, descripcion, imagen_url, id_categoria, youtube_id
         `;
 
-        const values = [nombre, precio, stock, descripcion || null, imagen_url || null, id_categoria];
+        const values = [nombre, precio, stock, descripcion || null, imagen_url || null, id_categoria, youtube_id || null];
         const result = await client.query(query, values);
 
         // Confirmar transacción
